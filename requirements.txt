@@ -1,0 +1,7 @@
+# Allow for auto generation of type-hints during runtime.
+pyannotate
+# Run python tests.
+pytest-cov
+# This file ensures that the pre-commit service is ran every time you commit.
+# Ensure the python function arguments are verified at runtime.
+typeguard
