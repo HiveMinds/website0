@@ -26,7 +26,7 @@ def index() -> Union[Any, str]:
     Users can login here, or are logged in already.
     """
     if "username" in session:
-        return "You are logged in as " + session["username"]
+        return redirect(url_for("dashboard"))
 
     return render_template("index.html")
 
@@ -78,15 +78,17 @@ def register() -> Union[Any, str]:
     return render_template("register.html")
 
 
-@app.route("/check_credits", methods=["POST"])  # type: ignore[misc]
-def check_credits(*, some_client: MongoClient) -> int:
-    """Endpoint to check remaining credits for a user."""
-
+@app.route("/dashboard")  # type: ignore[misc]
+def dashboard() -> Union[Any, str]:
+    """Renders the dashboard with the user's credits."""
     if "username" not in session:
-        return 0
-
+        return render_template("index.html")
     username: str = session["username"]
-    return get_credits(some_client=some_client, username=username)
+    credits: int = get_credits(some_client=client, username=username)
+    print(f"user {username} has {credits} credits")
+    return render_template(
+        "dashboard.html", username=username, remaining_credits=credits
+    )
 
 
 if __name__ == "__main__":
