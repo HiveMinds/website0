@@ -3,88 +3,17 @@
 Allows you to create new users, and login as those users. The passwords
 are stored hashed and salted.
 """
-import json
 from typing import Any, Dict, Union
 
 import bcrypt
-import bson
 from flask import Flask, redirect, render_template, request, session, url_for
 from pymongo.cursor import Cursor
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from typeguard import typechecked
 
-
-@typechecked
-def load_json(file_path: str) -> Dict[str, str]:
-    """Load a dictionary from a JSON file.
-
-    Args:
-    - file_path (str): The path to the JSON file.
-
-    Returns:
-    - dict: The loaded dictionary from the JSON file.
-    """
-    with open(file_path, encoding="utf-8") as file:
-        data: Dict[str, str] = json.load(file)
-    return data
-
-
-# Load config dict from file above root dir.
-config: Dict[str, str] = load_json("../config.yml")
-mongo_username = config["mongodb_username"]
-mongo_pwd = config["mongodb_password"]
-mongo_cluster_name = config["mongodb_cluster_name"]
-mongo_db_name = config["mongodb_database_name"]
-app_secret = config["app_cookie_secret"]
-
-
-# Load the username from the environment.
-mongo_uri: str = (
-    f"mongodb+srv://{mongo_username}:{mongo_pwd}@{mongo_cluster_name}."
-    + f"{mongo_db_name}.mongodb.net/?retryWrites=true&w=majority"
-)
-
-# Create a new client and connect to the server
-client = MongoClient(mongo_uri, server_api=ServerApi("1"))
-
-# Send a ping to confirm a successful connection
-client.admin.command("ping")
-print("Pinged your deployment. You successfully connected to MongoDB!")
-
-
-@typechecked
-def get_users(*, some_client: MongoClient) -> Cursor:
-    """Returns the users from the database."""
-    database = some_client["database0"]
-    users_collection = database["users"]
-    # Retrieve all users from the 'users' collection
-    users: Cursor = users_collection.find()
-    return users
-
-
-@typechecked
-def add_user(
-    *, some_client: MongoClient, username: str, password: bytes
-) -> bson.objectid.ObjectId:
-    """Adds a new username and password to the MongoDB 'users' collection."""
-    database = some_client["database0"]
-    users_collection = database["users"]
-
-    hashed_salted_pwd = bcrypt.hashpw(password, bcrypt.gensalt())
-
-    # Create a document for the new user
-    user_document = {
-        "username": username,
-        "password": hashed_salted_pwd.decode("utf-8"),
-    }
-
-    # Insert the new user document into the 'users' collection
-    result = users_collection.insert_one(user_document)
-
-    # Return the ID of the inserted document
-    return result.inserted_id
-
+from src.website0.credits import get_credits
+from src.website0.database_helper import add_user, get_users
+from src.website0.helper_file import load_json
 
 # Start website
 app: Flask = Flask(__name__)
@@ -98,6 +27,7 @@ def index() -> Union[Any, str]:
     """
     if "username" in session:
         return "You are logged in as " + session["username"]
+
     return render_template("index.html")
 
 
@@ -148,5 +78,39 @@ def register() -> Union[Any, str]:
     return render_template("register.html")
 
 
-app.secret_key = app_secret
-app.run(debug=False)
+@app.route("/check_credits", methods=["POST"])  # type: ignore[misc]
+def check_credits(*, some_client: MongoClient) -> int:
+    """Endpoint to check remaining credits for a user."""
+
+    if "username" not in session:
+        return 0
+
+    username: str = session["username"]
+    return get_credits(some_client=some_client, username=username)
+
+
+if __name__ == "__main__":
+    # Load config dict from file above root dir.
+    config: Dict[str, str] = load_json("../config.yml")
+    mongo_username = config["mongodb_username"]
+    mongo_pwd = config["mongodb_password"]
+    mongo_cluster_name = config["mongodb_cluster_name"]
+    mongo_db_name = config["mongodb_database_name"]
+    app_secret = config["app_cookie_secret"]
+
+    # Load the username from the environment.
+    mongo_uri: str = (
+        f"mongodb+srv://{mongo_username}:{mongo_pwd}@{mongo_cluster_name}."
+        + f"{mongo_db_name}.mongodb.net/?retryWrites=true&w=majority"
+    )
+
+    # Create a new client and connect to the server
+    client = MongoClient(mongo_uri, server_api=ServerApi("1"))
+
+    # Send a ping to confirm a successful connection
+    client.admin.command("ping")
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+
+    # app.check_credits(some_client=client)
+    app.secret_key = app_secret
+    app.run(debug=False)
