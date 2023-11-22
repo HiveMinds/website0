@@ -35,5 +35,27 @@ def add_user(
     # Insert the new user document into the 'users' collection
     result = users_collection.insert_one(user_document)
 
+    initialise_zero_credits(some_client=some_client, username=username)
+
     # Return the ID of the inserted document
     return result.inserted_id
+
+
+@typechecked
+def initialise_zero_credits(
+    *,
+    some_client: MongoClient,
+    username: str,
+) -> None:
+    """Initialise the credits database with zero credits for all users."""
+
+    database = some_client["database0"]
+    user_credits_collection = database["user_credits"]
+
+    user_credits_doc = {
+        "username": username,
+        "credits": 42,
+    }
+
+    # Initialise the credits database with zero credits for all users
+    user_credits_collection.insert_one(user_credits_doc)

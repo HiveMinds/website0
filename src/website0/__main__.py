@@ -3,7 +3,7 @@
 Allows you to create new users, and login as those users. The passwords
 are stored hashed and salted.
 """
-from typing import Any, Dict, Union
+from typing import Any, Dict, Tuple, Union
 
 import bcrypt
 from flask import Flask, redirect, render_template, request, session, url_for
@@ -91,6 +91,19 @@ def dashboard() -> Union[Any, str]:
         username=username,
         remaining_credits=remaining_credits,
     )
+
+
+@app.route("/buy_credits", methods=["POST"])  # type: ignore[misc]
+def buy_credits() -> Tuple[str, int]:
+    """Represents the buy credits page of the website."""
+    # Call the function to buy credits here
+    # Ensure proper error handling and response as needed
+    # Example:
+    # buy_credits()
+    return (
+        "Credits bought successfully",
+        200,
+    )  # Adjust the response as per your requirements
 
 
 if __name__ == "__main__":

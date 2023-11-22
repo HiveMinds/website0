@@ -5,8 +5,27 @@
         <div class="col-md-4 col-md-offset-4">
             <p>Username: {{ username }}</p>
             <p>Remaining credits: {{ remaining_credits }}</p>
-            <button class="btn btn-primary btn-block">Buy Credits</button>
+            <button class="btn btn-primary btn-block" id="buy-credits-btn">Buy Credits</button>
         </div>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#buy-credits-btn').click(function() {
+            $.ajax({
+                type: 'POST',
+                url: '/buy_credits',  // This is the route in your backend to handle buying credits
+                success: function(response) {
+                    alert('Credits bought successfully!');
+                    // Optionally, update the UI to reflect the new credits
+                    // For example, update remaining_credits on the frontend
+                },
+                error: function(error) {
+                    alert('An error occurred while buying credits.');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
