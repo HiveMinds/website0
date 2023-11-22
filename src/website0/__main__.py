@@ -84,10 +84,12 @@ def dashboard() -> Union[Any, str]:
     if "username" not in session:
         return render_template("index.html")
     username: str = session["username"]
-    credits: int = get_credits(some_client=client, username=username)
-    print(f"user {username} has {credits} credits")
+    remaining_credits: int = get_credits(some_client=client, username=username)
+    print(f"user {username} has {remaining_credits} credits")
     return render_template(
-        "dashboard.html", username=username, remaining_credits=credits
+        "dashboard.html",
+        username=username,
+        remaining_credits=remaining_credits,
     )
 
 
