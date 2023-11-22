@@ -11,7 +11,7 @@ from pymongo.cursor import Cursor
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
-from src.website0.credits import get_credits
+from src.website0.credits import get_credits, set_credits
 from src.website0.database_helper import add_user, get_users
 from src.website0.helper_file import load_json
 
@@ -100,6 +100,15 @@ def buy_credits() -> Tuple[str, int]:
     # Ensure proper error handling and response as needed
     # Example:
     # buy_credits()
+    current_redits: int = get_credits(
+        some_client=client, username=session["username"]
+    )
+    print(f"current credits: {current_redits}")
+    set_credits(
+        some_client=client,
+        username=session["username"],
+        new_credits=current_redits + 100,
+    )
     return (
         "Credits bought successfully",
         200,
