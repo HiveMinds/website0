@@ -3,8 +3,7 @@
 Allows you to create new users, and login as those users. The passwords
 are stored hashed and salted.
 """
-import os
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Tuple, Union
 
 import bcrypt
 from flask import Flask, redirect, render_template, request, session, url_for
@@ -14,7 +13,7 @@ from pymongo.server_api import ServerApi
 
 from src.website0.credits import get_credits, set_credits
 from src.website0.database_helper import add_user, get_users
-from src.website0.helper_file import load_json
+from src.website0.helper_environment import load_config
 
 # Start website
 app: Flask = Flask(__name__)
@@ -117,25 +116,9 @@ def buy_credits() -> Tuple[str, int]:
 
 
 if __name__ == "__main__":
-    # Load config dict from file above root dir.
-    config: Dict[str, str] = load_json("../config.yml")
-    mongo_username = config["mongodb_username"]
-    mongo_pwd = config["mongodb_password"]
-    mongo_cluster_name = config["mongodb_cluster_name"]
-    mongo_db_name = config["mongodb_database_name"]
-    app_secret = config["app_cookie_secret"]
-    mollie_test_api_key = config["mollie_test_api_key"]
-
-    # Set the Mollie API key as environment variable.
-    os.environ["MOLLIE_API_KEY"] = mollie_test_api_key
-    if os.environ.get("MOLLIE_API_KEY", "test_test") != mollie_test_api_key:
-        raise ValueError("Mollie API key not set correctly")
-
-    # Load the username from the environment.
-    mongo_uri: str = (
-        f"mongodb+srv://{mongo_username}:{mongo_pwd}@{mongo_cluster_name}."
-        + f"{mongo_db_name}.mongodb.net/?retryWrites=true&w=majority"
-    )
+    app_secret: str
+    mongo_uri: str
+    app_secret, mongo_uri = load_config()
 
     # Create a new client and connect to the server
     client = MongoClient(mongo_uri, server_api=ServerApi("1"))
