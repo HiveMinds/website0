@@ -3,6 +3,7 @@
 Allows you to create new users, and login as those users. The passwords
 are stored hashed and salted.
 """
+import os
 from typing import Any, Dict, Tuple, Union
 
 import bcrypt
@@ -123,6 +124,12 @@ if __name__ == "__main__":
     mongo_cluster_name = config["mongodb_cluster_name"]
     mongo_db_name = config["mongodb_database_name"]
     app_secret = config["app_cookie_secret"]
+    mollie_test_api_key = config["mollie_test_api_key"]
+
+    # Set the Mollie API key as environment variable.
+    os.environ["MOLLIE_API_KEY"] = mollie_test_api_key
+    if os.environ.get("MOLLIE_API_KEY", "test_test") != mollie_test_api_key:
+        raise ValueError("Mollie API key not set correctly")
 
     # Load the username from the environment.
     mongo_uri: str = (
