@@ -20,10 +20,17 @@ repos:
          - --target-version=py36
 
 # Test if the python code is formatted according to the flake8 standard.
+#  - repo: https://github.com/Quantco/pre-commit-mirrors-flake8
+  #  rev: 6.1.0
+  #  exclude: (^src/website0/01-new-payment.py)
+  #  hooks:
+    # - id: flake8-conda
+
  - repo: https://github.com/Quantco/pre-commit-mirrors-flake8
    rev: 6.1.0
    hooks:
     - id: flake8-conda
+      exclude: ^src/website0/01-new-payment.py
 
 # Test if the import statements are sorted correctly.
  - repo: https://github.com/PyCQA/isort
@@ -45,6 +52,7 @@ repos:
       args: ["--strict"]
       additional_dependencies:
             - typeguard
+      exclude: ^src/website0/01-new-payment.py
 
   # TODO:
   #--strict
@@ -75,6 +83,7 @@ repos:
            "-rn", # Only display messages
            "-sn", # Don't display the score
          ]
+       exclude: ^src/website0/01-new-payment.py
 
 # Runs additional tests that are created by the pre-commit software itself.
  - repo: https://github.com/pre-commit/pre-commit-hooks

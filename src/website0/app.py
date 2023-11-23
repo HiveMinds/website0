@@ -3,13 +3,17 @@
 Allows you to create new users, and login as those users. The passwords
 are stored hashed and salted.
 """
-from typing import Any, Tuple, Union
+import json
+import os
+from typing import Any, Optional, Tuple, Union
 
 import bcrypt
+import flask
 from flask import Flask, redirect, render_template, request, session, url_for
 from pymongo.cursor import Cursor
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from typeguard import typechecked
 
 from src.website0.credits import get_credits, set_credits
 from src.website0.database_helper import add_user, get_users
@@ -115,7 +119,110 @@ def buy_credits() -> Tuple[str, int]:
     )  # Adjust the response as per your requirements
 
 
+# Include Mollie.
+@app.route("/")  # type: ignore[misc]
+def show_list() -> str:
+    """Returns html code which can show the list of Mollie examples in body of
+    the website."""
+    body: str = ""
+    # pylint:disable=E0601
+    for example in examples:
+        body += f'<a href="/{example}">{example}</a><br>'
+    return body
+
+
+@app.route("/<example>", methods=["GET", "POST"])  # type: ignore[misc]
+def run_example(example: Optional[str] = None) -> Any:
+    """Runs the Mollie example with the given name."""
+    print(f"examples={examples}")
+    print(f"example={example}")
+    if example not in examples:
+        flask.abort(404, "Example does not exist")
+    # return __import__(example).main()
+    print(f"import src.website0.{example}\n\n")
+    return __import__(f"src.website0.{example}").main()
+
+
+#
+# NOTE: This example uses json files as a "database".
+# Please use a real database like MySQL in production.
+#
+@typechecked
+def database_write(my_webshop_id: Union[str, int], data: Any) -> None:
+    """Store order-related data for the user in a json file."""
+    my_webshop_id = int(my_webshop_id)
+    file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "orders",
+        f"order-{my_webshop_id}.json",
+    )
+    with open(file, "w", encoding="utf-8") as database:
+        json.dump(data, database)
+
+
+def database_read(my_webshop_id: Union[str, int]) -> Any:
+    """Read the order-related data for the user from a json file."""
+    my_webshop_id = int(my_webshop_id)
+    file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "orders",
+        f"order-{my_webshop_id}.json",
+    )
+    with open(file, encoding="utf-8") as database:
+        return json.load(database)
+
+
+def get_public_url() -> str:
+    """Return the base URL for this application, usable for sending to the
+    mollie API.
+
+    This will normally return the flask root url, which points to 'localhost'
+    on dev machines. This is fine for limited local tests, but when you want
+    to make test payments against the Mollie API, you need an endpoint that is
+     reachable from the public internet.
+
+    If the variable `MOLLIE_PUBLIC_URL` is available in the environment, we
+    will use that instead of the flask root URL.
+    """
+    url: str
+    try:
+        url = os.environ["MOLLIE_PUBLIC_URL"]
+    except KeyError:
+        url = flask.request.url_root
+
+    if not url.endswith("/"):
+        return f"{url}/"
+    return url
+
+
 if __name__ == "__main__":
+    examples = [
+        "01-new-payment",
+        "01-new-payment-using-qrcode",
+        "02-webhook-verification",
+        "03-return-page",
+        "04-ideal-payment",
+        "05-payments-history",
+        "06-list-activated-methods",
+        "07-new-customer",
+        "08-list-customers",
+        "09-create-customer-payment",
+        "10-customer-payment-history",
+        "11-refund-payment",
+        "12-new-order",
+        "13-order-webhook-verification",
+        "14-cancel-order",
+        "15-list-orders",
+        "16-cancel-order-line",
+        "17-order-return-page",
+        "18-ship-order-completely",
+        "19-ship-order-partially",
+        "20-get-shipment",
+        "21-list-order-shipments",
+        "22-refund-order-completely",
+        "23-update-shipment-tracking",
+    ]
+
     app_secret: str
     mongo_uri: str
     app_secret, mongo_uri = load_config()
