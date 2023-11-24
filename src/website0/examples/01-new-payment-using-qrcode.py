@@ -1,14 +1,13 @@
-# Example: How to prepare a new payment with the Mollie API.
+# Example: How to prepare a new payment with the Mollie API, and render the QRcode.
 #
 
 import os
 import time
 
-import flask
+from app import database_write, get_public_url
+
 from mollie.api.client import Client
 from mollie.api.error import Error
-
-from src.website0.app import database_write, get_public_url
 
 PUBLIC_URL = get_public_url()
 
@@ -38,6 +37,8 @@ def main():
         # redirectUrl   Redirect location. The customer will be redirected there after the payment.
         # metadata      Custom metadata that is stored with the payment.
         #
+        # include=...   Request an optional QRcode from Mollie.
+        #
         payment = mollie_client.payments.create(
             {
                 "amount": {"currency": "EUR", "value": "120.00"},
@@ -45,7 +46,8 @@ def main():
                 "webhookUrl": f"{PUBLIC_URL}02-webhook-verification",
                 "redirectUrl": f"{PUBLIC_URL}03-return-page?my_webshop_id={my_webshop_id}",
                 "metadata": {"my_webshop_id": str(my_webshop_id)},
-            }
+            },
+            include="details.qrCode",
         )
 
         #
@@ -55,9 +57,18 @@ def main():
         database_write(my_webshop_id, data)
 
         #
-        # Send the customer off to complete the payment.
+        # Display the QRcode to the customer, to complete the payment.
         #
-        return flask.redirect(payment.checkout_url)
+        qr_code = payment.details["qrCode"]
+        body = f"""
+        Use the QRcode or visit the checkout page to complete the payment.
+        <hr/>
+        <img src='{qr_code["src"]}' />
+        <hr/>
+        <a href="{payment.checkout_url}">Visit checkout page</a>.
+        """
+
+        return body
 
     except Error as err:
         return f"API call failed: {err}"
