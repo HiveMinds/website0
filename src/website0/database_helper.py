@@ -1,4 +1,6 @@
 """Example python file with a function."""
+import re
+
 import bcrypt
 import bson
 from pymongo.cursor import Cursor
@@ -7,10 +9,12 @@ from typeguard import typechecked
 
 
 @typechecked
-def get_users(*, some_client: MongoClient) -> Cursor:
+def get_collection(
+    *, some_client: MongoClient, collection_name: str
+) -> Cursor:
     """Returns the users from the database."""
     database = some_client["database0"]
-    users_collection = database["users"]
+    users_collection = database[collection_name]
     # Retrieve all users from the 'users' collection
     users: Cursor = users_collection.find()
     return users
@@ -39,6 +43,23 @@ def add_user(
 
     # Return the ID of the inserted document
     return result.inserted_id
+
+
+@typechecked
+def has_email_format(*, username: str) -> bool:
+    """Check if the given username follows the email format.
+
+    Args:
+    - username (str): The username to be checked for email format.
+
+    Returns:
+    - bool: True if the username matches the email format, False otherwise.
+    """
+    # Regular expression to verify email format
+    email_regex = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+
+    # Check if the username matches the email format using regex
+    return bool(re.match(email_regex, username))
 
 
 @typechecked

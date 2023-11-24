@@ -4,10 +4,8 @@
 # repositories for e.g. black and flake8, is because those repositories also
 # need to contain a pre-commit hook file, which they often don't by default.
 # So to resolve that, a mirror is created that includes such a file.
-
 default_language_version:
-    python: python3.10.  # or python3
-
+    python: python3.11.  # or python3
 
 repos:
 # Test if the python code is formatted according to the Black standard.
@@ -24,6 +22,7 @@ repos:
    rev: 6.1.0
    hooks:
     - id: flake8-conda
+      exclude: ^src/website0/examples/|^mollie/
 
 # Test if the import statements are sorted correctly.
  - repo: https://github.com/PyCQA/isort
@@ -36,16 +35,26 @@ repos:
 # def is_larger(nr: int) -> bool: instead of def is_larger(nr). It makes
 # it explicit what type of input and output a function has.
 # - repo: https://github.com/python/mypy
- - repo: https://github.com/pre-commit/mirrors-mypy
-### - repo: https://github.com/a-t-0/mypy
-   rev: v1.7.0
-   hooks:
-    - id: mypy
-      # args: ["--disallow-untyped-calls", "--disallow-untyped-defs"]
-      args: ["--strict"]
-      additional_dependencies:
-            - typeguard
+#  - repo: https://github.com/pre-commit/mirrors-mypy
+  #  rev: v1.7.0
+  #  hooks:
+    # - id: mypy
+      # args: ["--config-file", "pyproject.toml"]
+      # additional_dependencies:
+            # - typeguard
 
+ - repo: https://github.com/pre-commit/mirrors-mypy
+   rev: "v1.7.0"
+   hooks:
+     - id: mypy
+       args: ["--config-file", "pyproject.toml"]
+       additional_dependencies:
+         - typeguard
+         - types-requests
+         - flask
+         - bcrypt
+         - bson
+         - pymongo
   # TODO:
   #--strict
   #--disallow-incomplete-defs
@@ -75,6 +84,7 @@ repos:
            "-rn", # Only display messages
            "-sn", # Don't display the score
          ]
+       exclude: ^src/website0/examples/|^mollie/
 
 # Runs additional tests that are created by the pre-commit software itself.
  - repo: https://github.com/pre-commit/pre-commit-hooks
