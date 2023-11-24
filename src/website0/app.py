@@ -3,7 +3,7 @@
 Allows you to create new users, and login as those users. The passwords
 are stored hashed and salted.
 """
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import bcrypt
 import flask
@@ -13,7 +13,11 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
 from src.website0.credits import get_credits, set_credits
-from src.website0.database_helper import add_user, get_users
+from src.website0.database_helper import (
+    add_user,
+    get_collection,
+    has_email_format,
+)
 from src.website0.examples.a_new_payment import new_payment
 from src.website0.helper_environment import load_config
 
@@ -37,16 +41,15 @@ def index() -> Union[Any, str]:
 def login() -> Union[Any, str]:
     """Represents the login page of the website."""
     # Get the username from the website form.
-    entered_username: str = request.form["username"]
-
+    entered_username: str = request.form["username"].lower()
     # Get the users from the database.
-    users: Cursor = get_users(some_client=client)
+    users: Cursor = get_collection(some_client=client, collection_name="users")
 
     for user_db in users:
         if user_db["username"] == entered_username:
             user_pwd: bytes = user_db["password"].encode("utf-8")
             if bcrypt.checkpw(request.form["pass"].encode("utf-8"), user_pwd):
-                session["username"] = request.form["username"]
+                session["username"] = request.form["username"].lower()
                 return redirect(url_for("index"))
     return "Invalid username or password"
 
@@ -59,16 +62,20 @@ def register() -> Union[Any, str]:
     """
     if request.method == "POST":
         # Get the username from the website form.
-        entered_username: str = request.form["username"]
+        entered_username: str = request.form["username"].lower()
 
         # Get the users from the database.
-        users: Cursor = get_users(some_client=client)
+        users: Cursor = get_collection(
+            some_client=client, collection_name="users"
+        )
 
         # Check if one can create the requested new user by checking if the
         # username does not yet exist.
         for user_db in users:
             if user_db["username"] == entered_username:
                 return "That username already exists!"
+            if not has_email_format(username=entered_username):
+                return "That username is not an email address!"
 
         # Add the new user to the database.
         add_user(
@@ -96,25 +103,20 @@ def dashboard() -> Union[Any, str]:
 
 
 @app.route("/buy_credits", methods=["POST"])  # type: ignore[misc]
-def buy_credits() -> Tuple[str, int]:
+def buy_credits() -> str:
     """Represents the buy credits page of the website."""
-    # Call the function to buy credits here
-    # Ensure proper error handling and response as needed
-    # Example:
-    # buy_credits()
     current_redits: int = get_credits(
         some_client=client, username=session["username"]
     )
-    print(f"current credits: {current_redits}")
-    set_credits(
+
+    new_credits: int = set_credits(
         some_client=client,
         username=session["username"],
         new_credits=current_redits + 100,
     )
-    return (
-        "Credits bought successfully",
-        200,
-    )  # Adjust the response as per your requirements
+
+    print(f"new_credits={new_credits}")
+    return str(new_credits)
 
 
 # Include Mollie.

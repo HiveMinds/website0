@@ -6,7 +6,7 @@ from pymongo.cursor import Cursor as Cursor
 from src.website0.credits import get_credits as get_credits
 from src.website0.credits import set_credits as set_credits
 from src.website0.database_helper import add_user as add_user
-from src.website0.database_helper import get_users as get_users
+from src.website0.database_helper import get_collection as get_collection
 from src.website0.examples.a_new_payment import new_payment as new_payment
 from src.website0.helper_environment import load_config as load_config
 

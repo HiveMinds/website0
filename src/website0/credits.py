@@ -36,14 +36,25 @@ def set_credits(
     username: str,
     new_credits: int,
 ) -> int:
-    """Retrieve the number of credits for a given username."""
-    database = some_client["database0"]
-    credits_collection = database["user_credits"]
+    """Retrieve the number of credits for a given username.
 
-    # Find the user's credit information
-    user_credit_info = credits_collection.find_one({"username": username})
-    if user_credit_info is None:
-        raise ValueError("User does not exist")
-    print(f"set to: {new_credits}")
-    user_credit_info["credits"] = new_credits
-    return new_credits
+    TODO: change getting username and password using find_one as it is faster.
+    """
+
+    old_credits: int = 0
+    user_credits_collection = some_client["database0"]["user_credits"]
+    user_credit = user_credits_collection.find_one({"username": username})
+
+    if user_credit:
+        if "credits" in user_credit:
+            old_credits = user_credit["credits"]
+
+        # Update the credits for the user
+        user_credits_collection.update_one(
+            {"username": username}, {"$set": {"credits": new_credits}}
+        )
+        print(f"Changed:{old_credits} to: {new_credits}")
+        return new_credits
+
+    print(f"Error, was not able to find user_id:{username}")
+    return 0  # Return 0 if user doesn't exist or has no credits
