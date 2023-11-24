@@ -7,7 +7,6 @@
 import os
 
 import flask
-from app import database_read
 
 from mollie.api.client import Client
 

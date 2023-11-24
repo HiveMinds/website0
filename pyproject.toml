@@ -33,8 +33,16 @@ omit = [
 profile = "black"
 
 
-[tool.mypy]
-python_version = "3.11"
+[mypy]
+ignore_missing_imports = true
+strict = true
+exclude = ["mollie", "src/website0/examples/", "setup.py"]
+[[tool.mypy.overrides]]
+module = "mollie.api.out.mollie.api.error.*,mollie.api.out.mollie.api.resources.*,mollie.api.out.mollie.api.version.*,mollie.api.objects.out.mollie.api.objects.base.*,requests_oauthlib.*"
+ignore_missing_imports = true
+[[tool.mypy.overrides]]
+module = "setuptools.*"
+ignore_missing_imports = true
 
 
 [tool.pylint.basic]

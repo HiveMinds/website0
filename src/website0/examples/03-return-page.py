@@ -6,7 +6,6 @@
 #
 
 import flask
-from app import database_read
 
 
 def main():

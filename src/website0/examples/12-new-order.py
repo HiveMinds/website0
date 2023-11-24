@@ -5,10 +5,10 @@ import os
 import time
 
 import flask
-from app import database_write, get_public_url
 
 from mollie.api.client import Client
 from mollie.api.error import Error
+from src.website0.helper_mollie_database import database_write, get_public_url
 
 PUBLIC_URL = get_public_url()
 

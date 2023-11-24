@@ -180,7 +180,7 @@ if __name__ == "__main__":
     app_secret, mongo_uri = load_config()
 
     # Create a new client and connect to the server
-    client = MongoClient(mongo_uri, server_api=ServerApi("1"))
+    client: MongoClient = MongoClient(mongo_uri, server_api=ServerApi("1"))
 
     # Send a ping to confirm a successful connection
     client.admin.command("ping")
